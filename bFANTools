@@ -379,12 +379,27 @@ end
 
 # Push to all remotes
 def pushToGitRemotes(branch='develop', force=0)
-  sh Dir.pwd + "/../../fastlane/push_to_remotes.sh #{branch} #{force}"
+  if force
+    force = "-f"
+  else
+    force = ""
+  end
+  remotes = %x[git remote].split("\n")
+  remotes.each do |remote|
+    remote.chomp!
+    UI.important "Pushing #{branch} to remote: #{branch}\""
+    sh "git push #{force} #{remote} #{branch}"
+  end
 end
 
 # Pull from all remotes
 def pullFromGitRemotes(branch)
-  sh Dir.pwd + "/../../fastlane/pull_from_remotes.sh #{branch}"
+  remotes = %x[git remote].split("\n")
+  remotes.each do |remote|
+    remote.chomp!
+    UI.important "Pulling #{branch} from remote: #{branch}\""
+    sh "git pull --no-edit #{remote} #{branch}"
+  end
 end
 
 # gitCommit
@@ -601,7 +616,7 @@ def notifySlack(msg, payload, success, channel)
   slack(
     message: msg,
     success: success,
-    slack_url: "https://hooks.slack.com/services/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",
+    slack_url: "https://hooks.slack.com/services/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",
     channel: channel,
     payload: {
       'Build Date' => Time.new.to_s,
@@ -690,11 +705,7 @@ def beforeAll(tag)
 
   # If it's not a tag, we pull the branch to get latest code
   if /^[0-9]+\.[0-9]+(\.[0-9]*)*$/.match(tag) == nil
-    remotes = %x[git remote]
-    remotes.each do |remote|
-      UI.important "Pulling #{tag} from remote: #{tag}\""
-      sh "git pull --no-edit #{remote} #{tag}"
-    end
+    pullFromGitRemotes(tag)
   end
 
   UI.important "TAG: '#{tag}'"
