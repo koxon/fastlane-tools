@@ -690,11 +690,11 @@ def beforeAll(tag)
 
   # If it's not a tag, we pull the branch to get latest code
   if /^[0-9]+\.[0-9]+(\.[0-9]*)*$/.match(tag) == nil
-    cmd = "pwd && for i in `git remote`; do " +
-                    " echo \"Pulling #{tag} from remote: #{tag}\" " +
-                    " git pull --no-edit $i $1 " +
-                 " done; "
-    `#{cmd}`
+    remotes = %x[git remote]
+    remotes.each do |remote|
+      UI.important "Pulling #{tag} from remote: #{tag}\""
+      sh "git pull --no-edit #{remote} #{tag}"
+    end
   end
 
   UI.important "TAG: '#{tag}'"
