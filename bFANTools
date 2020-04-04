@@ -1,3 +1,6 @@
+fastlane_require 'aws-sdk'
+fastlane_require 'open-uri'
+
 ###
 ### CUSTOM FUNCTIONS to be used with Android and iOS Fastfiles
 ### See their Fastfile for more information
@@ -30,9 +33,6 @@
 # end
 ###
 ###
-
-fastlane_require 'aws-sdk'
-fastlane_require 'open-uri'
 
 # Load the proper configuration file
 def loadAndroidConfigFile(org_id)
@@ -690,7 +690,10 @@ def beforeAll(tag)
 
   # If it's not a tag, we pull the branch to get latest code
   if /^[0-9]+\.[0-9]+(\.[0-9]*)*$/.match(tag) == nil
-    sh "pwd && ../../fastlane/pull_from_remotes.sh #{tag}"
+    sh "pwd && for i in `git remote`; do" +
+          "echo \"Pulling #{tag} from remote: #{tag}\"" +
+          "git pull --no-edit $i $1" +
+       "done;"
   end
 
   UI.important "TAG: '#{tag}'"
