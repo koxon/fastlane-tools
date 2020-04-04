@@ -447,10 +447,10 @@ def getNextTagVersion()
 end
 
 # Setup react dependencies
-def buildReact(react_tag, env, platform)
-  UI.important "Starting to build React bundle"
-  sh "cd ../../ && git checkout #{react_tag} && ./node-modules.sh && yarn deployment:#{platform}-#{env} && cd -"
-end
+# def buildReact(react_tag, env, platform)
+#   UI.important "Starting to build React bundle"
+#   sh "cd ../../ && git checkout #{react_tag} && ./node-modules.sh && yarn deployment:#{platform}-#{env} && cd -"
+# end
 
 # Create keystore for the new app
 def createKeystore(org)
@@ -636,48 +636,45 @@ def afterAll(tag, env)
 end
 
 # Get the React Tag for current project tag
-def getReactTag(tag)
+# def getReactTag(tag)
 
-  # If tag is a tag and react_tag is null
-  # We the best react tag for our tag
-  if /^[0-9]*\.[0-9]*(\.[0-9]*)*$/.match(tag) != nil
-    # It's a tag, we split it and return it
-    chunks = tag.split('.')
-    # We get the closest react tag looking at the first two digits
-    matching = `cd ../.. && git tag -l | sort -n -t. -k1,1 -k2,2 -k3,3 -r | egrep '^#{chunks[0]}\.#{chunks[1]}' | egrep -v 'qa|prod' | head -1 | tail -1 | tr -d '\n' && cd - > /dev/null`
-    return matching
-  end
+#   # If tag is a tag and react_tag is null
+#   # We the best react tag for our tag
+#   if /^[0-9]*\.[0-9]*(\.[0-9]*)*$/.match(tag) != nil
+#     # It's a tag, we split it and return it
+#     chunks = tag.split('.')
+#     # We get the closest react tag looking at the first two digits
+#     matching = `cd ../.. && git tag -l | sort -n -t. -k1,1 -k2,2 -k3,3 -r | egrep '^#{chunks[0]}\.#{chunks[1]}' | egrep -v 'qa|prod' | head -1 | tail -1 | tr -d '\n' && cd - > /dev/null`
+#     return matching
+#   end
 
-  # We find an exact same branch in react
-  matching = `cd ../.. && git branch | grep #{tag} | head -1 | tail -1 | tr -d '\n' | tr -d ' ' | tr -d '*' && cd - > /dev/null`
-  if tag == matching
-    return matching
-  end
+#   # We find an exact same branch in react
+#   matching = `cd ../.. && git branch | grep #{tag} | head -1 | tail -1 | tr -d '\n' | tr -d ' ' | tr -d '*' && cd - > /dev/null`
+#   if tag == matching
+#     return matching
+#   end
 
-    # If feature branch
-  if /^(feature)\/.+$/.match(tag) != nil
-    return 'develop'
-  end
+#     # If feature branch
+#   if /^(feature)\/.+$/.match(tag) != nil
+#     return 'develop'
+#   end
 
-  # If hotfix or release branch
-  if /^(release|hotfix)\/.+$/.match(tag) != nil
-    return 'master'
-  end
+#   # If hotfix or release branch
+#   if /^(release|hotfix)\/.+$/.match(tag) != nil
+#     return 'master'
+#   end
 
-  return 'develop'
-end
+#   return 'develop'
+# end
 
 # Run before all
-def beforeAll(tag, react_tag)
+def beforeAll(tag)
   UI.important "Setup git for the build"
-
-  # Get all tags for React
-  sh "cd ../../ && pwd && git fetch --all && git fetch --all --tags -f && cd -"
 
   # Get all tags for  project
   sh "pwd && git fetch --all && git fetch --all --tags -f"
 
-  # get react tag
+  # get tag
   if tag == nil || tag == "develop"
     # we get the last commit
     tag = getLastCommit()
@@ -688,22 +685,6 @@ def beforeAll(tag, react_tag)
     UI.important "No TAG provided to build. Using the 'master' latest TAG: #{tag}"
   end
 
-  if react_tag == nil
-    react_tag = getReactTag(tag)
-
-    if react_tag == nil || react_tag.empty?
-      UI.user_error!("TAG #{tag} - Impossible to find the React TAG! Make sure the TAG in React is properly set to match the project TAG. You must provide a match two digit tag. e.g: tag: 2.5.45 will match a react_tag: 2.5.*")
-    end
-  end
-
-  # Checkout the react tag or branch
-  sh "cd ../../ && pwd && git checkout -f #{react_tag}"
-
-  # If it's not a tag, we pull the branch to get latest code for React
-  if /^[0-9]+\.[0-9]+(\.[0-9]*)*$/.match(react_tag) == nil
-    sh "cd ../../ && pwd && fastlane/pull_from_remotes.sh #{react_tag}"
-  end
-
   # Checkout the tag or branch
   sh "pwd && git checkout -f #{tag}"
 
@@ -712,7 +693,7 @@ def beforeAll(tag, react_tag)
     sh "pwd && ../../fastlane/pull_from_remotes.sh #{tag}"
   end
 
-  UI.important "TAG: '#{tag}' - React TAG: '#{react_tag}'"
+  UI.important "TAG: '#{tag}'"
 
-  return tag, react_tag
+  return tag
 end
