@@ -694,7 +694,7 @@ def beforeAll(tag)
                     " echo \"Pulling #{tag} from remote: #{tag}\" " +
                     " git pull --no-edit $i $1 " +
                  " done; "
-    `cmd`
+    `#{cmd}`
   end
 
   UI.important "TAG: '#{tag}'"
